@@ -44,9 +44,11 @@ is_vcf <- function(x) {
     n_max = 1
   )
 
+  # COMMIT NOTE: FORMAT FIELD IS NOT MANDITORY
+
   vcf_cols <- c(
     "#CHROM", "POS", "ID", "REF", "ALT", "QUAL",
-    "FILTER", "INFO", "FORMAT"
+    "FILTER", "INFO"
   )
   d_cols <- colnames(d)
 
