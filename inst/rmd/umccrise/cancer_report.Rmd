@@ -165,7 +165,7 @@ gpgr::write_tsvjsongz(purple_cnv_germ$tab, glue("purple/{bnm}-purple_cnv_germ"),
 blank_lines(2)
 ```
 
-## __Structural Variants__ {#sv-summary}
+## __Structural Variants__ (prioritised, filtered) {#sv-summary}
 Structural variants are inferred with [Manta](https://github.com/illumina/manta),
 adjusted using [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator#7-structural-variant-recovery-and-single-breakend-filtering),
 and prioritised using [simple_sv_annotation](https://github.com/AstraZeneca-NGS/simple_sv_annotation).
@@ -374,39 +374,10 @@ d %>%
 blank_lines(1)
 ```
 
-### __SV Map__ {#sv-unmelted}
-
-```{r svtab_raw, eval=!no_sv_found}
-svtab_raw <- sv_unmelted %>%
-  dplyr::select(-annotation) %>%
-  dplyr::arrange(TierTop, vcfnum)
-
-svtab_rawdt <- svtab_raw %>%
-  DT::datatable(
-    filter = list(position = "top", clear = FALSE, plain = TRUE),
-    class = "cell-border display compact",
-    rownames = FALSE, extensions = c("Scroller", "Buttons", "KeyTable"),
-    options = list(
-      scroller = TRUE, scrollY = 400, scrollX = TRUE, autoWidth = FALSE, keys = TRUE,
-      buttons = c("csv", "excel"), dom = "Blfrtip"
-    )
-  )
-```
-
-```{r svtab_raw_details, eval=!no_sv_found}
-details::details(sv_detail_table(svtab_raw), lang = "none", summary = "Column Description")
-svtab_rawdt
-```
-
-```{r, results='asis'}
-blank_lines(2)
-```
-
-### __Translocations (BNDs)__ {.tabset .tabset-fade #translocations}
+### __Breakends__ {.tabset .tabset-fade #breakends}
 
 ```{r svtab_BND, eval=!no_sv_found}
 sv_BND <- sv_all %>%
-  dplyr::filter(Type == "BND") %>%
   dplyr::mutate(
     nrow = dplyr::row_number(),
     nrow = sprintf(glue::glue("%0{nchar(nrow(.))}d"), nrow)
@@ -416,7 +387,7 @@ sv_BND <- sv_all %>%
 
 sv_BND_main <- sv_BND %>%
   dplyr::select(
-    nrow, vcfnum, `Tier (Top)`, Start, End,
+    nrow, vcfnum, Type, `Tier (Top)`, Start, End,
     BND_ID, BND_mate,
     Genes, Effect, Detail, SR_alt, PR_alt, SR_PR_sum, AF_PURPLE
   )
@@ -493,6 +464,11 @@ sv_BND_otherdt
 details::details(sv_detail_table(sv_BND_purple), lang = "none", summary = "Column Description")
 sv_BND_purpledt
 ```
+
+
+### Genome-wide __Somatic__ CNV Segments {#cnv-segs}
+
+<!--
 
 ### __DEL/DUP/INS__ {.tabset .tabset-fade #deldupins}
 
@@ -635,6 +611,7 @@ details::details(sv_detail_table(sv_noBND_manytx), lang = "none", summary = "Col
 sv_noBND_manytxdt
 ```
 
+
 ## __Copy Number Variants__
 The purity and ploidy estimator
 [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator)
@@ -643,6 +620,8 @@ is used to generate a copy number profile for the somatic sample.
 ```{r, results='asis'}
 blank_lines(1)
 ```
+
+-->
 
 ### UMCCR __Gene Somatic__ CNV Calls {#cnv-gene}
 
@@ -683,7 +662,11 @@ purple_cnv_som_gene$tab %>%
 blank_lines(2)
 ```
 
-### Genome-wide __Somatic__ CNV Segments {#cnv-segs}
+## __Structural Variants__ (unprioritised, unfiltered) {#sv-summary-all}
+
+### Breakends
+
+### Genome-wide __Somatic__ CNV Segments {#cnv-segs-all}
 
 <details>
 <summary>Description</summary>
