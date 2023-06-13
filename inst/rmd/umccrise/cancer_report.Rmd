@@ -21,6 +21,7 @@ params:
   purple_germ_cnv: NULL
   purple_purity: NULL
   purple_qc: NULL
+  purple_som_cnv_ann: NULL
   purple_som_cnv: NULL
   purple_som_gene_cnv: NULL
   purple_som_snv_vcf: NULL
@@ -165,8 +166,9 @@ gpgr::write_tsvjsongz(purple_cnv_germ$tab, glue("purple/{bnm}-purple_cnv_germ"),
 blank_lines(2)
 ```
 
-## __Structural Variants__ (prioritised, filtered) {#sv-summary}
-Structural variants are inferred with [Manta](https://github.com/illumina/manta),
+## __Structural Variants__ (filtered) {#sv-summary}
+
+Structural variants are inferred with [GRIDSS](https://github.com/illumina/manta),
 adjusted using [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator#7-structural-variant-recovery-and-single-breakend-filtering),
 and prioritised using [simple_sv_annotation](https://github.com/AstraZeneca-NGS/simple_sv_annotation).
 Allele frequencies, copy number changes and ploidy are purity-adjusted.
@@ -466,18 +468,15 @@ sv_BND_purpledt
 ```
 
 
-### Genome-wide __Somatic__ CNV Segments {#cnv-segs}
+### __Copy number alterations__ {.tabset .tabset-fade #cnvs}
 
-<!--
+```{r svtab_cnv}
+cnv <- gpgr::purple_cnv_som_ann_process(params$purple_som_cnv_ann)
 
-### __DEL/DUP/INS__ {.tabset .tabset-fade #deldupins}
-
-```{r svtab_noBND, eval=!no_sv_found}
-sv_noBND <- sv_all %>%
-  dplyr::filter(!Type %in% c("BND", "PURPLE_inf")) %>%
+cnv_temp <- cnv$tab %>%
   dplyr::mutate(
     nrow = dplyr::row_number(),
-    nrow = sprintf(glue::glue("%0{nchar(nrow(.))}d"), nrow),
+    #nrow = sprintf(glue::glue("%0{nchar(nrow(.))}d"), nrow),
     Genes_original = Genes,
     Transcript_original = Transcript
   )
@@ -485,7 +484,7 @@ sv_noBND <- sv_all %>%
 max_genes <- 2
 max_transcripts <- 2
 
-sv_noBND_main <- sv_noBND %>%
+cnv_main <- cnv_temp %>%
   dplyr::mutate(
     Genes = ifelse(ngen > max_genes,
       glue::glue("Many Genes ({ngen})"),
@@ -497,37 +496,32 @@ sv_noBND_main <- sv_noBND %>%
     )
   ) %>%
   dplyr::select(
-    nrow, vcfnum, `Tier (Top)`, Type, Start, End, Effect,
-    Genes, Transcript, Detail, SR_alt, PR_alt, SR_PR_sum, AF_PURPLE
+    nrow, `Tier (Top)`, Type, Chr, Start, End, Effect,
+    Genes, Transcript, Detail, CN, `CN Min+Maj`, `Start/End SegSupport`, Method,
+    `BAF (count)`, `GC (windowCount)`
   )
 
-gpgr::write_tsvjsongz(sv_noBND_main, glue("sv/{bnm}-05_sv_noBND_main"), result_outdir)
+gpgr::write_tsvjsongz(cnv_main, glue("sv/{bnm}-01_cnv_main"), result_outdir)
 
-sv_noBND_other <- sv_noBND %>%
-  dplyr::select(vcfnum, CNC, CN, SR_PR_ref, Quality) %>%
-  dplyr::distinct()
-
-gpgr::write_tsvjsongz(sv_noBND_other, glue("sv/{bnm}-06_sv_noBND_other"), result_outdir)
-
-sv_noBND_manygenes <- sv_noBND %>%
+cnv_main_manygenes <- cnv_temp %>%
   dplyr::filter(ngen > max_genes) %>%
-  dplyr::select(nrow, vcfnum, `Tier (Top)`, Type, Start, End,
+  dplyr::select(nrow, `Tier (Top)`, Type, Start, End,
     Effect, ngen,
     Genes = Genes_original
   )
 
-gpgr::write_tsvjsongz(sv_noBND_manygenes, glue("sv/{bnm}-07_sv_noBND_manygenes"), result_outdir)
+gpgr::write_tsvjsongz(cnv_main_manygenes, glue("sv/{bnm}-02_cnv_main_manygenes"), result_outdir)
 
-sv_noBND_manytx <- sv_noBND %>%
+cnv_main_manytx <- cnv_temp %>%
   dplyr::filter(ntrx > max_transcripts) %>%
-  dplyr::select(nrow, vcfnum, `Tier (Top)`, Type, Start, End,
+  dplyr::select(nrow, `Tier (Top)`, Type, Start, End,
     Effect, ntrx,
     Transcript = Transcript_original
   )
 
-gpgr::write_tsvjsongz(sv_noBND_manytx, glue("sv/{bnm}-08_sv_noBND_manytranscripts"), result_outdir)
+gpgr::write_tsvjsongz(cnv_main_manytx, glue("sv/{bnm}-03_cnv_main_manytx"), result_outdir)
 
-sv_noBND_maindt <- sv_noBND_main %>%
+cnv_maindt <- cnv_main %>%
   DT::datatable(
     filter = list(position = "top", clear = FALSE, plain = TRUE),
     class = "cell-border display compact",
@@ -539,20 +533,7 @@ sv_noBND_maindt <- sv_noBND_main %>%
     )
   )
 
-sv_noBND_otherdt <- sv_noBND_other %>%
-  DT::datatable(
-    filter = list(position = "top", clear = FALSE, plain = TRUE),
-    class = "cell-border display compact",
-    rownames = FALSE, extensions = c("Buttons"),
-    options = list(
-      pageLength = 20,
-      autoWidth = FALSE,
-      buttons = c("csv", "excel"),
-      dom = "Blfrtip"
-    )
-  )
-
-sv_noBND_manygenesdt <- sv_noBND_manygenes %>%
+cnv_main_manygenesdt <- cnv_main_manygenes %>%
   DT::datatable(
     filter = list(position = "top", clear = FALSE, plain = TRUE),
     class = "cell-border display compact",
@@ -565,7 +546,7 @@ sv_noBND_manygenesdt <- sv_noBND_manygenes %>%
     )
   )
 
-sv_noBND_manytxdt <- sv_noBND_manytx %>%
+cnv_main_manytxdt <- cnv_main_manytx %>%
   DT::datatable(
     filter = list(position = "top", clear = FALSE, plain = TRUE),
     class = "cell-border display compact",
@@ -581,47 +562,29 @@ sv_noBND_manytxdt <- sv_noBND_manytx %>%
 
 #### Main Columns
 
-```{r sv_noBND_main, eval=!no_sv_found}
-details::details(sv_detail_table(sv_noBND_main), lang = "none", summary = "Column Description")
-sv_noBND_maindt
+```{r cnv_main}
+#details::details(sv_detail_table(cnv_main), lang = "none", summary = "Column Description")
+cnv_maindt
 ```
 
 ```{r, results='asis'}
 blank_lines(2)
 ```
 
-#### Other Columns
-
-```{r sv_noBND2_other, eval=!no_sv_found}
-details::details(sv_detail_table(sv_noBND_other), lang = "none", summary = "Column Description")
-sv_noBND_otherdt
-```
-
 #### Many Genes
 
-```{r sv_noBND_manygenes, eval=!no_sv_found}
-details::details(sv_detail_table(sv_noBND_manygenes), lang = "none", summary = "Column Description")
-sv_noBND_manygenesdt
+```{r cnv_main_manygenes}
+#details::details(sv_detail_table(cnv_main_manygenes), lang = "none", summary = "Column Description")
+cnv_main_manygenesdt
 ```
 
 #### Many Transcripts
 
-```{r sv_noBND_manytx, eval=!no_sv_found}
-details::details(sv_detail_table(sv_noBND_manytx), lang = "none", summary = "Column Description")
-sv_noBND_manytxdt
+```{r cnv_main_manytx}
+#details::details(sv_detail_table(cnv_main_manytx), lang = "none", summary = "Column Description")
+cnv_main_manytxdt
 ```
 
-
-## __Copy Number Variants__
-The purity and ploidy estimator
-[PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator)
-is used to generate a copy number profile for the somatic sample.
-
-```{r, results='asis'}
-blank_lines(1)
-```
-
--->
 
 ### UMCCR __Gene Somatic__ CNV Calls {#cnv-gene}
 
@@ -662,9 +625,11 @@ purple_cnv_som_gene$tab %>%
 blank_lines(2)
 ```
 
-## __Structural Variants__ (unprioritised, unfiltered) {#sv-summary-all}
+## __Structural Variants__ (unfiltered) {#sv-summary-all}
 
+<!--
 ### Breakends
+-->
 
 ### Genome-wide __Somatic__ CNV Segments {#cnv-segs-all}
 
