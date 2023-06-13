@@ -69,7 +69,6 @@ linx_rmd <- function(sample, table_dir, plot_dir, out_file = NULL, quiet = FALSE
 #' @param key_genes Path to UMCCR cancer gene file.
 #' @param oncoviral_breakpoints_tsv Path to `oncoviruses/oncoviral_breakpoints.tsv`.
 #' @param oncoviral_present_viruses Path to `oncoviruses/present_viruses.txt`.
-#' @param purple_germ_cnv Path to `purple.cnv.germline.tsv`.
 #' @param purple_purity Path to `purple.purity.tsv`.
 #' @param purple_qc Path to `purple.qc`.
 #' @param purple_som_cnv Path to `purple.cnv.somatic.tsv`.
@@ -88,12 +87,10 @@ linx_rmd <- function(sample, table_dir, plot_dir, out_file = NULL, quiet = FALSE
 #' @return Path to rendered HTML report.
 #' @export
 cancer_rmd <- function(af_global, af_keygenes, batch_name, conda_list, img_dir, key_genes,
-                       oncoviral_breakpoints_tsv, oncoviral_present_viruses,
-                       purple_germ_cnv, purple_purity, purple_qc, purple_som_cnv_ann,
-                       purple_som_cnv, purple_som_gene_cnv, purple_som_snv_vcf,
-                       somatic_snv_summary, somatic_snv_vcf, somatic_sv_tsv, somatic_sv_vcf,
-                       result_outdir, tumor_name,
-                       out_file = NULL, quiet = FALSE) {
+                       oncoviral_breakpoints_tsv, oncoviral_present_viruses, purple_purity,
+                       purple_qc, purple_som_cnv_ann, purple_som_cnv, purple_som_gene_cnv,
+                       purple_som_snv_vcf, somatic_snv_summary, somatic_snv_vcf, somatic_sv_tsv,
+                       somatic_sv_vcf, result_outdir, tumor_name, out_file = NULL, quiet = FALSE) {
   assertthat::assert_that(
     dir.exists(img_dir),
     quiet %in% c(FALSE, TRUE)
@@ -130,7 +127,6 @@ cancer_rmd <- function(af_global, af_keygenes, batch_name, conda_list, img_dir, 
     purple_som_gene_cnv = purple_som_gene_cnv,
     purple_som_cnv_ann = purple_som_cnv_ann,
     purple_som_cnv = purple_som_cnv,
-    purple_germ_cnv = purple_germ_cnv,
     purple_purity = purple_purity,
     purple_qc = purple_qc,
     purple_som_snv_vcf = purple_som_snv_vcf,

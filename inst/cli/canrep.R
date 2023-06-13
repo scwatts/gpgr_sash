@@ -13,7 +13,6 @@ canrep_add_args <- function(subp) {
   canrep$add_argument("--purple_som_gene_cnv", help = "Path to `purple.cnv.gene.tsv`.", required = TRUE)
   canrep$add_argument("--purple_som_cnv_ann", help = "Path to annotated and prioritised `purple.cnv.somatic.tsv`.", required = TRUE)
   canrep$add_argument("--purple_som_cnv", help = "Path to `purple.cnv.somatic.tsv`.", required = TRUE)
-  canrep$add_argument("--purple_germ_cnv", help = "Path to `purple.cnv.germline.tsv`.", required = TRUE)
   canrep$add_argument("--purple_purity", help = "Path to `purple.purity.tsv`.", required = TRUE)
   canrep$add_argument("--purple_qc", help = "Path to `purple.qc`.", required = TRUE)
   canrep$add_argument("--purple_som_snv_vcf", help = "Path to `purple.somatic.vcf.gz`.", required = TRUE)
@@ -41,7 +40,6 @@ canrep_parse_args <- function(args) {
     purple_som_gene_cnv = args$purple_som_gene_cnv,
     purple_som_cnv_ann = args$purple_som_cnv_ann,
     purple_som_cnv = args$purple_som_cnv,
-    purple_germ_cnv = args$purple_germ_cnv,
     purple_purity = args$purple_purity,
     purple_qc = args$purple_qc,
     purple_som_snv_vcf = args$purple_som_snv_vcf,
