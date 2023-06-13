@@ -16,6 +16,7 @@ cancer_rmd(
   purple_germ_cnv,
   purple_purity,
   purple_qc,
+  purple_som_cnv_ann,
   purple_som_cnv,
   purple_som_gene_cnv,
   purple_som_snv_vcf,
@@ -51,6 +52,8 @@ cancer_rmd(
 \item{purple_purity}{Path to \code{purple.purity.tsv}.}
 
 \item{purple_qc}{Path to \code{purple.qc}.}
+
+\item{purple_som_cnv_ann}{Path to annotated and prioritised \code{purple.cnv.somatic.tsv}.}
 
 \item{purple_som_cnv}{Path to \code{purple.cnv.somatic.tsv}.}
 
