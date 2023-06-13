@@ -18,13 +18,12 @@
 purple_cnv_som_gene_read <- function(x) {
   nm <- c(
     "chromosome" = "c", "start" = "i", "end" = "i", "gene" = "c",
-    "minCopyNumber" = "d", "maxCopyNumber" = "d",
-    "unused" = "c", "somaticRegions" = "d", "germlineHomDeletionRegions" = "d",
-    "germlineHetToHomDeletionRegions" = "d",
-    "transcriptId" = "c", "transcriptVersion" = "c", "chromosomeBand" = "c",
+    "minCopyNumber" = "d", "maxCopyNumber" = "d", "somaticRegions" = "d",
+    "transcriptId" = "c", "isCanonical" = "c", "chromosomeBand" = "c",
     "minRegions" = "d", "minRegionStart" = "i", "minRegionEnd" = "i",
     "minRegionStartSupport" = "c", "minRegionEndSupport" = "c",
-    "minRegionMethod" = "c", "minMinorAlleleCopyNumber" = "d"
+    "minRegionMethod" = "c", "minMinorAlleleCopyNumber" = "d",
+    "depthWindowCount" = "i"
   )
 
   ctypes <- paste(nm, collapse = "")
@@ -33,7 +32,6 @@ purple_cnv_som_gene_read <- function(x) {
   assertthat::assert_that(all(colnames(purple_cnv_gene) == names(nm)))
   purple_cnv_gene
 }
-
 
 #' Process PURPLE CNV Gene File for UMCCRISE
 #'
@@ -80,13 +78,12 @@ purple_cnv_som_gene_process <- function(x, g = NULL) {
     dplyr::filter(.data$gene %in% genes$symbol) |>
     dplyr::mutate(
       chromosome = as.factor(.data$chromosome),
-      transcriptID = paste0(.data$transcriptId, ".", .data$transcriptVersion),
+      transcriptID = paste0(.data$transcriptId),
       minRegStartEnd = paste0(.data$minRegionStart, "-", .data$minRegionEnd),
       minRegSupportStartEndMethod = paste0(
         .data$minRegionStartSupport, "-", .data$minRegionEndSupport,
         " (", .data$minRegionMethod, ")"
       ),
-      germDelReg = paste0(.data$germlineHomDeletionRegions, "/", .data$germlineHetToHomDeletionRegions),
       oncogene = .data$gene %in% oncogenes,
       tsgene = .data$gene %in% tsgenes,
       onco_or_ts = dplyr::case_when(
@@ -101,7 +98,7 @@ purple_cnv_som_gene_process <- function(x, g = NULL) {
       chrom = "chromosome", "start", "end",
       chrBand = "chromosomeBand", "onco_or_ts",
       "transcriptID", minMinorAlleleCN = "minMinorAlleleCopyNumber",
-      somReg = "somaticRegions", "germDelReg", minReg = "minRegions",
+      somReg = "somaticRegions", minReg = "minRegions",
       "minRegStartEnd", "minRegSupportStartEndMethod"
     )
 
@@ -115,7 +112,6 @@ purple_cnv_som_gene_process <- function(x, g = NULL) {
     "transcriptID", "Ensembl transcript ID (dot version)",
     "minMinorAlleleCN", "Minimum allele ploidy found over the gene exons - useful for identifying LOH events",
     "somReg (somaticRegions)", "Count of somatic copy number regions this gene spans",
-    "germDelReg (germlineHomDeletionRegions / germlineHetToHomDeletionRegions)", "Number of regions spanned by this gene that are (homozygously deleted in the germline / both heterozygously deleted in the germline and homozygously deleted in the tumor)",
     "minReg (minRegions)", "Number of somatic regions inside the gene that share the min copy number",
     "minRegStartEnd", "Start/End base of the copy number region overlapping the gene with the minimum copy number",
     "minRegSupportStartEndMethod", "Start/end support of the CN region overlapping the gene with the min CN (plus determination method)"
@@ -623,7 +619,7 @@ purple_snv_vcf_read <- function(x) {
     dplyr::select("ID", "Description")
 
   info_cols <- c(
-    "AF", "PURPLE_AF", "PURPLE_CN",
+    "PURPLE_AF", "PURPLE_CN",
     "PURPLE_GERMLINE", "PURPLE_MACN", "PURPLE_VCN",
     "HMF_HOTSPOT", "KT", "MH", "SUBCL", "TNC"
   )
@@ -654,7 +650,7 @@ purple_snv_vcf_read <- function(x) {
 purple_kataegis <- function(x) {
   d <- purple_snv_vcf_read(x)
   info_cols <- c(
-    "KT", "AF", "PURPLE_AF", "PURPLE_CN",
+    "KT", "PURPLE_AF", "PURPLE_CN",
     "PURPLE_MACN", "PURPLE_VCN", "SUBCL",
     "MH", "TNC"
   )
