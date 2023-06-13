@@ -73,6 +73,7 @@ linx_rmd <- function(sample, table_dir, plot_dir, out_file = NULL, quiet = FALSE
 #' @param purple_purity Path to `purple.purity.tsv`.
 #' @param purple_qc Path to `purple.qc`.
 #' @param purple_som_cnv Path to `purple.cnv.somatic.tsv`.
+#' @param purple_som_cnv_ann Path to annotated and prioritised `purple.cnv.somatic.tsv`.
 #' @param purple_som_gene_cnv Path to `purple.cnv.gene.tsv`.
 #' @param purple_som_snv_vcf Path to `purple.somatic.vcf.gz`.
 #' @param result_outdir Path to directory to write tidy JSON/TSV results.
@@ -88,9 +89,9 @@ linx_rmd <- function(sample, table_dir, plot_dir, out_file = NULL, quiet = FALSE
 #' @export
 cancer_rmd <- function(af_global, af_keygenes, batch_name, conda_list, img_dir, key_genes,
                        oncoviral_breakpoints_tsv, oncoviral_present_viruses,
-                       purple_germ_cnv, purple_purity, purple_qc, purple_som_cnv,
-                       purple_som_gene_cnv, purple_som_snv_vcf, somatic_snv_summary,
-                       somatic_snv_vcf, somatic_sv_tsv, somatic_sv_vcf,
+                       purple_germ_cnv, purple_purity, purple_qc, purple_som_cnv_ann,
+                       purple_som_cnv, purple_som_gene_cnv, purple_som_snv_vcf,
+                       somatic_snv_summary, somatic_snv_vcf, somatic_sv_tsv, somatic_sv_vcf,
                        result_outdir, tumor_name,
                        out_file = NULL, quiet = FALSE) {
   assertthat::assert_that(
@@ -127,6 +128,7 @@ cancer_rmd <- function(af_global, af_keygenes, batch_name, conda_list, img_dir, 
     somatic_sv_tsv = somatic_sv_tsv,
     somatic_sv_vcf = somatic_sv_vcf,
     purple_som_gene_cnv = purple_som_gene_cnv,
+    purple_som_cnv_ann = purple_som_cnv_ann,
     purple_som_cnv = purple_som_cnv,
     purple_germ_cnv = purple_germ_cnv,
     purple_purity = purple_purity,

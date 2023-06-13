@@ -162,8 +162,7 @@ purple_cnv_som_read <- function(x) {
 
 #' Process PURPLE CNV Somatic File for UMCCRISE
 #'
-#' Processes the `purple.cnv.somatic.tsv` file.
-#' and selects columns of interest.
+#' Processes the `purple.cnv.somatic.tsv` file and selects columns of interest.
 #'
 #' @param x Path to `purple.cnv.somatic.tsv` file.
 #'
@@ -229,6 +228,155 @@ purple_cnv_som_process <- function(x) {
     descr = descr
   )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#' Process PURPLE CNV Somatic File for UMCCRISE
+#'
+#' Processes the annotated and prioritised `purple.cnv.somatic.tsv` file.
+#'
+#' @param x Path to annotated and prioritised `purple.cnv.somatic.tsv` file.
+#'
+#' @return List with two elements:
+#' * `tab`: Tibble with more condensed columns.
+#' * `descr`: Description of tibble columns.
+#'
+#' @export
+purple_cnv_som_ann_process <- function(x) {
+  purple_cnv_somatic_ann <- purple_cnv_som_ann_read(x)
+
+  purple_cnv_somatic_ann___d <- purple_cnv_somatic_ann |>
+    dplyr::mutate(
+      Chr = as.factor(.data$chromosome),
+      minorAlleleCopyNumber = round(.data$minorAlleleCopyNumber, 1),
+      majorAlleleCopyNumber = round(.data$majorAlleleCopyNumber, 1),
+      `CopyNumber Min+Maj` = paste0(.data$minorAlleleCopyNumber, "+", .data$majorAlleleCopyNumber),
+      copyNumber = round(.data$copyNumber, 1),
+      bafAdj = round(.data$baf, 2),
+      gcContent = round(.data$gcContent, 2),
+      `Start/End SegSupport` = paste0(.data$segmentStartSupport, "-", .data$segmentEndSupport),
+      `BAF (count)` = paste0(.data$bafAdj, " (", .data$bafCount, ")"),
+      `GC (windowCount)` = paste0(.data$gcContent, " (", .data$depthWindowCount, ")"),
+      TopTier = sv_top_tier,
+      annotation = simple_ann
+    ) |>
+    dplyr::select(
+      "Chr",
+      Start = "start", End = "end", Type = "svtype", CN = "copyNumber",
+      `CN Min+Maj` = "CopyNumber Min+Maj", "Start/End SegSupport",
+      Method = "method", "BAF (count)", "GC (windowCount)", "TopTier", "annotation"
+    )
+
+  abbreviate_effectv <- Vectorize(gpgr::abbreviate_effect)
+
+  purple_cnv_somatic_ann <- purple_cnv_somatic_ann___d |>
+    dplyr::mutate(annotation = strsplit(.data$annotation, ",")) |>
+    tidyr::unnest(.data$annotation) |>
+    tidyr::separate(
+      .data$annotation, c("Event", "Effect", "Genes", "Transcript", "Detail", "Tier"),
+      sep = "\\|", convert = FALSE
+    ) |>
+    dplyr::mutate(
+      ntrx = gpgr::count_pieces(.data$Transcript, "&"),
+      ngen = gpgr::count_pieces(.data$Genes, "&"),
+      neff = gpgr::count_pieces(.data$Effect, "&"),
+      Transcript = .data$Transcript |> stringr::str_replace_all("&", ", "),
+      Genes = .data$Genes |> stringr::str_replace_all("&", ", "),
+      Effect = abbreviate_effectv(.data$Effect),
+      `Tier (Top)` = glue::glue("{Tier} ({TopTier})")
+    ) |>
+    dplyr::distinct() |>
+    dplyr::filter(Detail != 'unprioritized') |>
+    dplyr::arrange(.data$`Tier (Top)`, .data$Genes, .data$Effect)
+
+  descr <- dplyr::tribble(
+    ~Column, ~Description,
+    "Chr/Start/End", "Coordinates of copy number segment",
+    "Type", "Simple type interpretation of SV.",
+    "CN", "Fitted absolute copy number of segment adjusted for purity and ploidy",
+    "CN Min+Maj", "CopyNumber of minor + major allele adjusted for purity",
+    "Start/End SegSupport", paste0(
+      "Type of SV support for the CN breakpoint at ",
+      "start/end of region. Allowed values: ",
+      "CENTROMERE, TELOMERE, INV, DEL, DUP, BND (translocation), ",
+      "SGL (single breakend SV support), NONE (no SV support for CN breakpoint), ",
+      "MULT (multiple SV support at exact breakpoint)"
+    ),
+    "Method", paste0(
+      "Method used to determine the CN of the region. Allowed values: ",
+      "BAF_WEIGHTED (avg of all depth windows for the region), ",
+      "STRUCTURAL_VARIANT (inferred using ploidy of flanking SVs), ",
+      "LONG_ARM (inferred from the long arm), GERMLINE_AMPLIFICATION ",
+      "(inferred using special logic to handle regions of germline amplification)"
+    ),
+    "BAF (count)", "Tumor BAF after adjusted for purity and ploidy (Count of AMBER baf points covered by this segment)",
+    "GC (windowCount)", "Proportion of segment that is G or C (Count of COBALT windows covered by this segment)",
+    "TierTop", "Top priority of the event (from simple_sv_annotation: 1 highest, 4 lowest).",
+  )
+
+  list(
+    tab = purple_cnv_somatic_ann,
+    descr = descr
+  )
+}
+
+
+
+
+
+purple_cnv_som_ann_read <- function(x) {
+  nm <- c(
+    "chromosome" = "c",
+    "start" = "i",
+    "end" = "i",
+    "svtype" = "c",
+    "baf" = "d",
+    "bafCount" = "d",
+    "copyNumber" = "d",
+    "depthWindowCount" = "i",
+    "gcContent" = "d",
+    "majorAlleleCopyNumber" = "d",
+    "method" = "c",
+    "minorAlleleCopyNumber" = "d",
+    "segmentEndSupport" = "c",
+    "segmentStartSupport" = "c",
+    "sv_top_tier" = "i",
+    "simple_ann" = "c"
+  )
+
+  ctypes <- paste(nm, collapse = "")
+  purple_cnv_somatic_ann <- readr::read_tsv(x, col_types = ctypes)
+  assertthat::assert_that(ncol(purple_cnv_somatic_ann) == length(nm))
+  assertthat::assert_that(all(colnames(purple_cnv_somatic_ann) == names(nm)))
+  purple_cnv_somatic_ann
+}
+
+
+
+
+
+
+
+
 
 #' Read PURPLE CNV Germline File
 #'

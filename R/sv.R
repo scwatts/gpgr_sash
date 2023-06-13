@@ -73,6 +73,7 @@ split_double_col <- function(d, nms) {
 #' expect_equal(m, 2)
 #' expect_error(gpgr:::count_pieces("foo", NA))
 #'
+#' @export
 count_pieces <- function(x, sep) {
   ifelse(nchar(x) == 0, 0, stringr::str_count(x, sep) + 1)
 }
@@ -107,6 +108,7 @@ count_pieces <- function(x, sep) {
 #' expect_equal(e3, "TFBSDel, TFBSVar")
 #' expect_equal(e4, "badaboom, bar, foo, StopGain")
 #'
+#' @export
 abbreviate_effect <- function(effects) {
   effect_abbrev_nms <- names(gpgr::EFFECT_ABBREVIATIONS)
 
@@ -201,6 +203,7 @@ process_sv <- function(x) {
       melted = NULL
     ))
   }
+
   col_descr <- dplyr::tribble(
     ~Column, ~Description,
     "nrow", "Row number that connects variants between tables in same tab set.",
