@@ -1249,7 +1249,8 @@ cnv_maindt <- cnv_main %>%
       scroller = TRUE, scrollY = 400, scrollX = TRUE, autoWidth = FALSE, keys = TRUE,
       buttons = c("csv", "excel"), dom = "Blfrtip"
     )
-  )
+  ) |>
+  DT::formatCurrency(~ Start + End, currency = "", interval = 3, mark = ",", digits = 0)
 
 cnv_main_manygenesdt <- cnv_main_manygenes %>%
   DT::datatable(
@@ -1260,7 +1261,8 @@ cnv_main_manygenesdt <- cnv_main_manygenes %>%
       scroller = TRUE, scrollY = 400, scrollX = TRUE, autoWidth = FALSE, keys = TRUE,
       buttons = c("csv", "excel"), dom = "Blfrtip"
     )
-  )
+  ) |>
+  DT::formatCurrency(~ Start + End + ngen, currency = "", interval = 3, mark = ",", digits = 0)
 
 cnv_main_manytxdt <- cnv_main_manytx %>%
   DT::datatable(
@@ -1271,7 +1273,8 @@ cnv_main_manytxdt <- cnv_main_manytx %>%
       scroller = TRUE, scrollY = 400, scrollX = TRUE, autoWidth = FALSE, keys = TRUE,
       buttons = c("csv", "excel"), dom = "Blfrtip"
     )
-  )
+  ) |>
+  DT::formatCurrency(~ Start + End, currency = "", interval = 3, mark = ",", digits = 0)
 ```
 
 #### Main Columns
