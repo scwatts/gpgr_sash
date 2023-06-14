@@ -1453,7 +1453,7 @@ knitr::include_graphics(file.path(img_dir, paste0(bnm, ".segment.png")))
 ### __Viral content__
 
 ```{r oncoviral_summary}
-vb_summary <- gpgr::virusbreakend_summary_read(vb_summary_fp)
+vb_summary <- gpgr::virusbreakend_summary_read(params$virusbreakend_tsv)
 
 details::details(knitr::kable(vb_summary$descr), lang = "none", summary = "Column Description")
 
@@ -1480,7 +1480,7 @@ blank_lines(1)
 ### __Integration sites__
 
 ```{r oncoviral_integrations}
-vb_integrations <- gpgr::virusbreakend_vcf_read(vb_integrations_fp)
+vb_integrations <- gpgr::virusbreakend_vcf_read(params$virusbreakend_vcf)
 
 details::details(knitr::kable(vb_integrations$descr), lang = "none", summary = "Column Description")
 
