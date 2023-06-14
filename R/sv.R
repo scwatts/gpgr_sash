@@ -304,7 +304,7 @@ process_sv <- function(x) {
       END_tmp = ifelse(
         is.na(.data$END_tmp),
         NA_character_,
-        base::format(.data$END_tmp, big.mark = ",", trim = TRUE),
+        base::format(as.integer(.data$END_tmp), big.mark = ",", trim = TRUE)
       ),
       End = ifelse(
         is.na(.data$END_tmp),
