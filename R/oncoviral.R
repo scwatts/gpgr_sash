@@ -95,7 +95,7 @@ virusbreakend_summary_read <- function(x) {
 #' x <- system.file("extdata/virusbreakend/virusbreakend.vcf", package = "gpgr")
 #' (vb <- virusbreakend_vcf_read(x))
 #' @testexamples
-#' expect_equal(colnames(vb)[ncol(vb)], "Softclip read support")
+#' expect_equal(colnames(vb)[ncol(vb)], "QC")
 #'
 #' @export
 virusbreakend_vcf_read <- function(x) {
@@ -107,14 +107,14 @@ virusbreakend_vcf_read <- function(x) {
       dplyr::select(
           Contig="CHROM",
           Position="POS",
-          `Breakend ID`="ID",
-          `Mate ID`="MATEID",
-          Reference="REF",
-          Alt="ALT",
-          QC="FILTER",
           "Fragment support"="BVF",
           "Fragment support (unmapped)"="BUM",
           "Softclip read support"="BSC",
+          Reference="REF",
+          Alt="ALT",
+          `Breakend ID`="ID",
+          `Mate ID`="MATEID",
+          QC="FILTER",
       )
   } else {
       virusbreakend_integrations <- tibble::tibble()

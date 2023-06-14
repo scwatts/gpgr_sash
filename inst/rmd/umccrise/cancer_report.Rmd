@@ -611,7 +611,7 @@ sigs_snv_2015 %>%
 ```
 
 ```{r, results='asis'}
-blank_lines(1)
+blank_lines(2)
 ```
 
 #### 2020
@@ -625,7 +625,7 @@ sigs_snv_2020 %>%
 ```
 
 ```{r, results='asis'}
-blank_lines(1)
+blank_lines(2)
 ```
 
 ### __INDEL/DBS__ Signatures & Contributions {.tabset .tabset-fade #sig-indeldbs}
@@ -650,7 +650,7 @@ sigs_indel %>%
 ```
 
 ```{r, results='asis'}
-blank_lines(1)
+blank_lines(2)
 ```
 
 #### DBS
@@ -665,7 +665,7 @@ sigs_dbs %>%
 ```
 
 ```{r, results='asis'}
-blank_lines(1)
+blank_lines(2)
 ```
 
 ### __Rainfall Plot__ {#rainfall}
@@ -889,7 +889,11 @@ knitr::include_graphics(file.path(img_dir, paste0(bnm, ".circos.png")))
 knitr::include_graphics(file.path(img_dir, paste0(bnm, ".input.png")))
 ```
 
-## __Structural Variants__ {#sv-summary}
+```{r, results='asis'}
+blank_lines(1)
+```
+
+## __Structural Variants__
 
 Structural variants are inferred with [Manta](https://github.com/illumina/manta),
 adjusted using [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator#7-structural-variant-recovery-and-single-breakend-filtering),
@@ -1040,7 +1044,7 @@ DEL    | intergenic_region       | TXNIP-HFE2 | ENSG00000265972-ENSG00000168509 
 
 </details>
 
-### Summary {.tabset .tabset-fade}
+### Summary {.tabset .tabset-fade #sv-summary}
 
 #### Plots
 
@@ -1094,10 +1098,10 @@ d %>%
 ```
 
 ```{r, results='asis'}
-blank_lines(1)
+blank_lines(2)
 ```
 
-### __Breakend Annotations__ {.tabset .tabset-fade #breakends}
+### __Breakend Annotations__ {.tabset .tabset-fade #breakend-annotations}
 
 ```{r svtab_BND, eval=!no_sv_found}
 sv_BND <- sv_all %>%
@@ -1188,7 +1192,7 @@ details::details(sv_detail_table(sv_BND_purple), lang = "none", summary = "Colum
 sv_BND_purpledt
 ```
 
-### __CNV annotations__ {.tabset .tabset-fade}
+### __CNV annotations__ {.tabset .tabset-fade #cnv-annotations}
 
 ```{r svtab_cnv}
 cnv <- gpgr::purple_cnv_som_ann_process(params$purple_som_cnv_ann)
@@ -1284,11 +1288,19 @@ details::details(sv_detail_table(cnv_main), lang = "none", summary = "Column Des
 cnv_maindt
 ```
 
+```{r, results='asis'}
+blank_lines(2)
+```
+
 #### Many Genes
 
 ```{r cnv_main_manygenes}
 details::details(sv_detail_table(cnv_main_manygenes), lang = "none", summary = "Column Description")
 cnv_main_manygenesdt
+```
+
+```{r, results='asis'}
+blank_lines(2)
 ```
 
 #### Many Transcripts
@@ -1299,10 +1311,10 @@ cnv_main_manytxdt
 ```
 
 ```{r, results='asis'}
-blank_lines(1)
+blank_lines(2)
 ```
 
-### UMCCR __Gene Somatic__ CNV Calls {#cnv-gene}
+### UMCCR __Gene Somatic__ CNV Calls {#gene-panel-cnv}
 
 <details>
 <summary>Description</summary>
@@ -1341,7 +1353,7 @@ purple_cnv_som_gene$tab %>%
 blank_lines(2)
 ```
 
-### Genome-wide __Somatic__ CNV Segments {#cnv-segs-all}
+### Genome-wide __Somatic__ CNV Segments {#cnv-segments}
 
 <details>
 <summary>Description</summary>
@@ -1477,7 +1489,7 @@ if (nrow(vb_summary$tab) > 0) {
 ```
 
 ```{r, results='asis'}
-blank_lines(1)
+blank_lines(2)
 ```
 
 ### __Integration sites__
@@ -1513,7 +1525,7 @@ if (nrow(vb_integrations$tab) > 0) {
 ```
 
 ```{r, results='asis'}
-blank_lines(1)
+blank_lines(2)
 ```
 
 ## __Addendum__ {.tabset .tabset-fade #addendum}
