@@ -1196,7 +1196,6 @@ cnv <- gpgr::purple_cnv_som_ann_process(params$purple_som_cnv_ann)
 cnv_temp <- cnv$tab %>%
   dplyr::mutate(
     nrow = dplyr::row_number(),
-    #nrow = sprintf(glue::glue("%0{nchar(nrow(.))}d"), nrow),
     Genes_original = Genes,
     Transcript_original = Transcript
   )
@@ -1278,21 +1277,21 @@ cnv_main_manytxdt <- cnv_main_manytx %>%
 #### Main Columns
 
 ```{r cnv_main}
-#details::details(sv_detail_table(cnv_main), lang = "none", summary = "Column Description")
+details::details(sv_detail_table(cnv_main), lang = "none", summary = "Column Description")
 cnv_maindt
 ```
 
 #### Many Genes
 
 ```{r cnv_main_manygenes}
-#details::details(sv_detail_table(cnv_main_manygenes), lang = "none", summary = "Column Description")
+details::details(sv_detail_table(cnv_main_manygenes), lang = "none", summary = "Column Description")
 cnv_main_manygenesdt
 ```
 
 #### Many Transcripts
 
 ```{r cnv_main_manytx}
-#details::details(sv_detail_table(cnv_main_manytx), lang = "none", summary = "Column Description")
+details::details(sv_detail_table(cnv_main_manytx), lang = "none", summary = "Column Description")
 cnv_main_manytxdt
 ```
 
@@ -1451,25 +1450,63 @@ knitr::include_graphics(file.path(img_dir, paste0(bnm, ".segment.png")))
 
 ## __Oncoviruses__ {#oncoviruses}
 
-```{r oncoviruses_table}
-#breakpoints <- readr::read_tsv(breakpoints_tsv, col_names = T, col_types = "cciicicccc")
-#breakpoints %>%
-#  dplyr::mutate(Coord = ifelse(is.na(end), start, str_c(start, "-", end))) %>%
-#  dplyr::select(
-#    Contig = contig, Coord, `Read support` = PAIR_COUNT,
-#    `Disrupted genes` = DisruptedGenes, `Upstream genes` = UpstreamGenes,
-#    `SV type` = svtype, ID, MATEID
-#  ) %>%
-#  DT::datatable(
-#    filter = list(position = "top", clear = FALSE, plain = TRUE),
-#    class = "cell-border display compact",
-#    rownames = FALSE, extensions = c("Scroller", "Buttons", "KeyTable"),
-#    options = list(
-#      scroller = TRUE, scrollY = 400, scrollX = TRUE, autoWidth = TRUE, keys = TRUE,
-#      buttons = c("csv", "excel"), dom = "Bfrtip"
-#    )
-#  ) %>%
-#  DT::formatCurrency(~Coord, currency = "", interval = 3, mark = ",", digits = 0)
+### __Viral content__
+
+```{r oncoviral_summary}
+vb_summary <- gpgr::virusbreakend_summary_read(vb_summary_fp)
+
+details::details(knitr::kable(vb_summary$descr), lang = "none", summary = "Column Description")
+
+if (nrow(vb_summary$tab) > 0) {
+  DT::datatable(vb_summary$tab,
+    filter = list(position = "top", clear = FALSE, plain = TRUE),
+    class = "cell-border display compact",
+    rownames = FALSE, extensions = c("Scroller", "Buttons", "KeyTable"),
+    options = list(
+      scroller = TRUE, scrollY = 200, scrollX = TRUE, autoWidth = FALSE, keys = TRUE,
+      buttons = c("csv", "excel"), dom = "Blfrtip"
+    )
+  ) |>
+  DT::formatCurrency(~ Length + Reads, currency = "", interval = 3, mark = ",", digits = 0)
+} else {
+  cat("No oncoviral content detected.")
+}
+```
+
+```{r, results='asis'}
+blank_lines(1)
+```
+
+### __Integration sites__
+
+```{r oncoviral_integrations}
+vb_integrations <- gpgr::virusbreakend_vcf_read(vb_integrations_fp)
+
+details::details(knitr::kable(vb_integrations$descr), lang = "none", summary = "Column Description")
+
+if (nrow(vb_integrations$tab) > 0) {
+
+  format_common_cols <- c(
+    "Position",
+    "Fragment support",
+    "Fragment support (unmapped)",
+    "Softclip read support"
+  )
+
+  DT::datatable(vb_integrations$tab,
+    filter = list(position = "top", clear = FALSE, plain = TRUE),
+    class = "cell-border display compact",
+    rownames = FALSE, extensions = c("Scroller", "Buttons", "KeyTable"),
+    options = list(
+      scroller = TRUE, scrollY = 200, scrollX = TRUE, autoWidth = FALSE, keys = TRUE,
+      buttons = c("csv", "excel"), dom = "Blfrtip"
+    )
+  ) |>
+  DT::formatCurrency(format_common_cols, currency = "", interval = 3, mark = ",", digits = 0)
+
+} else {
+  cat("No oncoviral integrations detected.")
+}
 ```
 
 ```{r, results='asis'}
