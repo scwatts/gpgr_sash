@@ -16,8 +16,8 @@ params:
   conda_list: NULL
   img_dir: NULL
   key_genes: NULL
-  oncoviral_breakpoints_tsv: NULL
-  oncoviral_present_viruses: NULL
+  virusbreakend_tsv: NULL
+  virusbreakend_vcf: NULL
   purple_purity: NULL
   purple_qc: NULL
   purple_som_cnv_ann: NULL
@@ -1452,44 +1452,24 @@ knitr::include_graphics(file.path(img_dir, paste0(bnm, ".segment.png")))
 ## __Oncoviruses__ {#oncoviruses}
 
 ```{r oncoviruses_table}
-present_viruses <- params$oncoviral_present_viruses
-breakpoints_tsv <- params$oncoviral_breakpoints_tsv
-
-if (!is.na(breakpoints_tsv) && breakpoints_tsv != "" && file.exists(breakpoints_tsv)) {
-  breakpoints <- readr::read_tsv(breakpoints_tsv, col_names = T, col_types = "cciicicccc")
-  breakpoints %>%
-    dplyr::mutate(Coord = ifelse(is.na(end), start, str_c(start, "-", end))) %>%
-    dplyr::select(
-      Contig = contig, Coord, `Read support` = PAIR_COUNT,
-      `Disrupted genes` = DisruptedGenes, `Upstream genes` = UpstreamGenes,
-      `SV type` = svtype, ID, MATEID
-    ) %>%
-    DT::datatable(
-      filter = list(position = "top", clear = FALSE, plain = TRUE),
-      class = "cell-border display compact",
-      rownames = FALSE, extensions = c("Scroller", "Buttons", "KeyTable"),
-      options = list(
-        scroller = TRUE, scrollY = 400, scrollX = TRUE, autoWidth = TRUE, keys = TRUE,
-        buttons = c("csv", "excel"), dom = "Bfrtip"
-      )
-    ) %>%
-    DT::formatCurrency(~Coord, currency = "", interval = 3, mark = ",", digits = 0)
-} else {
-  if (!is.na(present_viruses) && present_viruses != "" && file.exists(present_viruses)) {
-    viruses <- readr::read_file(present_viruses)
-    if (str_length(viruses) > 0) {
-      cat(str_c(
-        "Detected significant traces of content of the following viruses: ",
-        viruses,
-        ", however no evidence of viral integration into the host genome is observed."
-      ))
-    } else {
-      cat("No oncoviral content detected in this sample.")
-    }
-  } else {
-    cat("Oncoviral detection was disabled in the umccrise run with `-E oncoviruses`.")
-  }
-}
+#breakpoints <- readr::read_tsv(breakpoints_tsv, col_names = T, col_types = "cciicicccc")
+#breakpoints %>%
+#  dplyr::mutate(Coord = ifelse(is.na(end), start, str_c(start, "-", end))) %>%
+#  dplyr::select(
+#    Contig = contig, Coord, `Read support` = PAIR_COUNT,
+#    `Disrupted genes` = DisruptedGenes, `Upstream genes` = UpstreamGenes,
+#    `SV type` = svtype, ID, MATEID
+#  ) %>%
+#  DT::datatable(
+#    filter = list(position = "top", clear = FALSE, plain = TRUE),
+#    class = "cell-border display compact",
+#    rownames = FALSE, extensions = c("Scroller", "Buttons", "KeyTable"),
+#    options = list(
+#      scroller = TRUE, scrollY = 400, scrollX = TRUE, autoWidth = TRUE, keys = TRUE,
+#      buttons = c("csv", "excel"), dom = "Bfrtip"
+#    )
+#  ) %>%
+#  DT::formatCurrency(~Coord, currency = "", interval = 3, mark = ",", digits = 0)
 ```
 
 ```{r, results='asis'}

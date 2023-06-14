@@ -16,8 +16,8 @@ canrep_add_args <- function(subp) {
   canrep$add_argument("--purple_purity", help = "Path to `purple.purity.tsv`.", required = TRUE)
   canrep$add_argument("--purple_qc", help = "Path to `purple.qc`.", required = TRUE)
   canrep$add_argument("--purple_som_snv_vcf", help = "Path to `purple.somatic.vcf.gz`.", required = TRUE)
-  canrep$add_argument("--oncoviral_present_viruses", help = "Path to `oncoviruses/present_viruses.txt`.", required = TRUE)
-  canrep$add_argument("--oncoviral_breakpoints_tsv", help = "Path to `oncoviruses/oncoviral_breakpoints.tsv`.", required = TRUE)
+  canrep$add_argument("--virusbreakend_tsv", help = "Path to VIRUSBreakend summary file.", required = TRUE)
+  canrep$add_argument("--virusbreakend_vcf", help = "Path to VIRUSBreakend VCF file.", required = TRUE)
   canrep$add_argument("--out_file", help = "Path to output HTML file (needs '.html' suffix) [def: {tumor_name}_cancer_report.html].")
   canrep$add_argument("--quiet", help = "Suppress log printing during rendering.", action = "store_true")
   canrep$add_argument("--result_outdir", help = "Path to directory to write tidy JSON/TSV results.", required = TRUE)
@@ -43,8 +43,8 @@ canrep_parse_args <- function(args) {
     purple_purity = args$purple_purity,
     purple_qc = args$purple_qc,
     purple_som_snv_vcf = args$purple_som_snv_vcf,
-    oncoviral_present_viruses = args$oncoviral_present_viruses,
-    oncoviral_breakpoints_tsv = args$oncoviral_breakpoints_tsv,
+    virusinterpreter_tsv = args$virusinterpreter_tsv,
+    virusbreakend_vcf = args$virusbreakend_vcf,
     out_file = args$out_file,
     quiet = args$quiet,
     result_outdir = args$result_outdir,
