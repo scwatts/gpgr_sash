@@ -47,19 +47,22 @@ virusbreakend_summary_read <- function(x) {
 
   ctypes <- paste(nm, collapse = "")
   virusbreakend_summary <- readr::read_tsv(x, col_types = ctypes)
-  assertthat::assert_that(ncol(virusbreakend_summary) == length(nm))
-  assertthat::assert_that(all(colnames(virusbreakend_summary) == names(nm)))
 
-  virusbreakend_summary <- virusbreakend_summary |>
-    dplyr::select(
-      Virus="name_assigned",
-      Length="endpos",
-      Reads="numreads",
-      Coverage="coverage",
-      `Mean depth`="meandepth",
-      Intergrations="integrations",
-      QC="QCStatus",
-    )
+  if (nrow(virusbreakend_summary) > 0) {
+    assertthat::assert_that(ncol(virusbreakend_summary) == length(nm))
+    assertthat::assert_that(all(colnames(virusbreakend_summary) == names(nm)))
+
+    virusbreakend_summary <- virusbreakend_summary |>
+      dplyr::select(
+        Virus="name_assigned",
+        Length="endpos",
+        Reads="numreads",
+        Coverage="coverage",
+        `Mean depth`="meandepth",
+        Intergrations="integrations",
+        QC="QCStatus",
+      )
+  }
 
   descr <- dplyr::tribble(
     ~Column, ~Description,
@@ -99,19 +102,23 @@ virusbreakend_vcf_read <- function(x) {
 
   d <- bedr::read.vcf(x, split.info = TRUE, verbose = FALSE)
 
-  virusbreakend_integrations <- tibble::as_tibble(d$vcf) |>
-    dplyr::select(
-        Contig="CHROM",
-        Position="POS",
-        `Breakend ID`="ID",
-        `Mate ID`="MATEID",
-        Reference="REF",
-        Alt="ALT",
-        QC="FILTER",
-        "Fragment support"="BVF",
-        "Fragment support (unmapped)"="BUM",
-        "Softclip read support"="BSC",
-    )
+  if (nrow(d$vcf) > 0) {
+    virusbreakend_integrations <- tibble::as_tibble(d$vcf) |>
+      dplyr::select(
+          Contig="CHROM",
+          Position="POS",
+          `Breakend ID`="ID",
+          `Mate ID`="MATEID",
+          Reference="REF",
+          Alt="ALT",
+          QC="FILTER",
+          "Fragment support"="BVF",
+          "Fragment support (unmapped)"="BUM",
+          "Softclip read support"="BSC",
+      )
+  } else {
+      virusbreakend_integrations <- tibble::tibble()
+  }
 
   descr <- dplyr::tribble(
     ~Column, ~Description,
@@ -128,7 +135,7 @@ virusbreakend_vcf_read <- function(x) {
   )
 
   list(
-    data = virusbreakend_integrations,
+    tab = virusbreakend_integrations,
     description = descr
   )
 }

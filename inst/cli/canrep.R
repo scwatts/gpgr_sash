@@ -43,7 +43,7 @@ canrep_parse_args <- function(args) {
     purple_purity = args$purple_purity,
     purple_qc = args$purple_qc,
     purple_som_snv_vcf = args$purple_som_snv_vcf,
-    virusinterpreter_tsv = args$virusinterpreter_tsv,
+    virusbreakend_tsv = args$virusbreakend_tsv,
     virusbreakend_vcf = args$virusbreakend_vcf,
     out_file = args$out_file,
     quiet = args$quiet,

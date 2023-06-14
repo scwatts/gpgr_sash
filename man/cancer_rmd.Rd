@@ -11,9 +11,8 @@ cancer_rmd(
   conda_list,
   img_dir,
   key_genes,
-  oncoviral_breakpoints_tsv,
-  oncoviral_present_viruses,
-  purple_germ_cnv,
+  virusbreakend_tsv,
+  virusbreakend_vcf,
   purple_purity,
   purple_qc,
   purple_som_cnv_ann,
@@ -43,11 +42,9 @@ cancer_rmd(
 
 \item{key_genes}{Path to UMCCR cancer gene file.}
 
-\item{oncoviral_breakpoints_tsv}{Path to \code{oncoviruses/oncoviral_breakpoints.tsv}.}
+\item{virusbreakend_tsv}{Path to VIRUSBreakend summary file.}
 
-\item{oncoviral_present_viruses}{Path to \code{oncoviruses/present_viruses.txt}.}
-
-\item{purple_germ_cnv}{Path to \code{purple.cnv.germline.tsv}.}
+\item{virusbreakend_vcf}{Path to VIRUSBreakend VCF file.}
 
 \item{purple_purity}{Path to \code{purple.purity.tsv}.}
 
