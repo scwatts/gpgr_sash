@@ -225,36 +225,21 @@ purple_cnv_som_process <- function(x) {
   )
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#' Process PURPLE CNV Somatic File for UMCCRISE
+#' Process an Annotated PURPLE CNV Somatic File
 #'
 #' Processes the annotated and prioritised `purple.cnv.somatic.tsv` file.
 #'
 #' @param x Path to annotated and prioritised `purple.cnv.somatic.tsv` file.
 #'
 #' @return List with two elements:
-#' * `tab`: Tibble with more condensed columns.
+#' * `tab`: Tibble containing selected data.
 #' * `descr`: Description of tibble columns.
+#'
+#' @examples
+#' x <- system.file("extdata/sash/purple.cnv.gene.annotated.tsv", package = "gpgr")
+#' (p <- purple_cnv_som_ann_process(x))
+#' @testexamples
+#' expect_equal(colnames(p)[ncol(p)], "annotation")
 #'
 #' @export
 purple_cnv_som_ann_process <- function(x) {
@@ -327,6 +312,7 @@ purple_cnv_som_ann_process <- function(x) {
     "BAF (count)", "Tumor BAF after adjusted for purity and ploidy (Count of AMBER baf points covered by this segment)",
     "GC (windowCount)", "Proportion of segment that is G or C (Count of COBALT windows covered by this segment)",
     "TierTop", "Top priority of the event (from simple_sv_annotation: 1 highest, 4 lowest).",
+    "annotation", "INFO/SIMPLE_ANN: Simplified structural variant annotation: 'SVTYPE | EFFECT | GENE(s) | TRANSCRIPT | PRIORITY (1-4)'"
   )
 
   list(
@@ -335,10 +321,21 @@ purple_cnv_som_ann_process <- function(x) {
   )
 }
 
-
-
-
-
+#' Read an Annotated PURPLE CNV Somatic File
+#'
+#' Reads the annotated and prioritised `purple.cnv.somatic.tsv` file.
+#'
+#' @param x Path to annotated and prioritised `purple.cnv.somatic.tsv` file.
+#'
+#' @return The input file as a tibble.
+#'
+#' @examples
+#' x <- system.file("extdata/sash/purple.cnv.gene.annotated.tsv", package = "gpgr")
+#' (p <- purple_cnv_som_ann_read(x))
+#' @testexamples
+#' expect_equal(colnames(p)[ncol(p)], "simple_ann")
+#'
+#' @export
 purple_cnv_som_ann_read <- function(x) {
   nm <- c(
     "chromosome" = "c",
@@ -364,59 +361,6 @@ purple_cnv_som_ann_read <- function(x) {
   assertthat::assert_that(ncol(purple_cnv_somatic_ann) == length(nm))
   assertthat::assert_that(all(colnames(purple_cnv_somatic_ann) == names(nm)))
   purple_cnv_somatic_ann
-}
-
-
-
-
-
-
-
-
-
-#' Read PURPLE CNV Germline File
-#'
-#' Reads the `purple.cnv.germline.tsv` file.
-#'
-#' @param x Path to `purple.cnv.germline.tsv` file.
-#'
-#' @return The input file as a tibble.
-#'
-#' @examples
-#' x <- system.file("extdata/purple/purple.cnv.germline.tsv", package = "gpgr")
-#' (p <- purple_cnv_germ_read(x))
-#' @testexamples
-#' expect_equal(colnames(p)[ncol(p)], "majorAlleleCopyNumber")
-#'
-#' @export
-purple_cnv_germ_read <- function(x) {
-  # as of PURPLE v2.39, germline and somatic files have same columns.
-  purple_cnv_germline <- purple_cnv_som_read(x)
-  purple_cnv_germline
-}
-
-#' Process PURPLE CNV germline File for UMCCRISE
-#'
-#' Processes the `purple.cnv.germline.tsv` file.
-#' and selects columns of interest.
-#'
-#' @param x Path to `purple.cnv.germline.tsv` file.
-#'
-#' @return List with two elements:
-#' * `tab`: Tibble with more condensed columns.
-#' * `descr`: Description of tibble columns.
-#'
-#' @examples
-#' x <- system.file("extdata/purple/purple.cnv.germline.tsv", package = "gpgr")
-#' (pp <- purple_cnv_germ_process(x))
-#' @testexamples
-#' expect_equal(colnames(pp$tab)[ncol(pp$tab)], "GC (windowCount)")
-#'
-#' @export
-purple_cnv_germ_process <- function(x) {
-  # as of PURPLE v2.39, germline and somatic files have same columns.
-  processed_purple_cnv_germline <- purple_cnv_som_process(x)
-  processed_purple_cnv_germline
 }
 
 #' Read PURPLE version file
