@@ -301,11 +301,19 @@ process_sv <- function(x) {
       Start = base::format(.data$Start, big.mark = ",", trim = TRUE),
       Start = paste0(.data$chrom, ":", .data$Start),
       END_tmp = ifelse(!.data$svtype %in% c("PURPLE_inf", "SGL"), .data$BND_mate_end, NA_character_),
-      END_tmp = base::format(.data$END_tmp, big.mark = ",", trim = TRUE),
-      End = paste0(
-        ifelse(.data$svtype == "BND", .data$BND_mate_chrom, .data$chrom),
-        ":",
-        .data$END_tmp
+      END_tmp = ifelse(
+        is.na(.data$END_tmp),
+        NA_character_,
+        base::format(.data$END_tmp, big.mark = ",", trim = TRUE),
+      ),
+      End = ifelse(
+        is.na(.data$END_tmp),
+        NA_character_,
+        paste0(
+          ifelse(.data$svtype == "BND", .data$BND_mate_chrom, .data$chrom),
+          ":",
+          .data$END_tmp
+        )
       )
     ) |>
     dplyr::select(
