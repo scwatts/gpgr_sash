@@ -895,114 +895,6 @@ blank_lines(1)
 
 ## __Structural Variants__
 
-Structural variants are inferred with [Manta](https://github.com/illumina/manta),
-adjusted using [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator#7-structural-variant-recovery-and-single-breakend-filtering),
-and prioritised using [simple_sv_annotation](https://github.com/AstraZeneca-NGS/simple_sv_annotation).
-Allele frequencies, copy number changes and ploidy are purity-adjusted.
-
-<details>
-<summary>SV Prioritisation Process</summary>
-
-The input file corresponds to `umccrised/<batch>/structural/<batch>-manta.tsv`.
-
-It's generated through the following steps:
-
-__Step 1: Processing__
-
-* __Input__: Manta structural variant calls from bcbio
-(`final/<tumor-name>/<batch-name>-sv-prioritize-manta.vcf.gz` (or
-`<batch-name>-manta.vcf.gz` if not prioritised))
-* Remove following annotations from Manta VCF:
-  'INFO/SIMPLE_ANN', 'INFO/SV_HIGHEST_TIER', 'FILTER/Intergenic', 'FILTER/MissingAnn', 'FILTER/REJECT'
-* Prioritise variants with [simple_sv_annotation](https://github.com/vladsaveliev/simple_sv_annotation)`
-* __Output__: `work/{batch}/structural/prioritize/{batch}-manta.vcf.gz`
-* Keep PASS variants
-* If more than 100,000 variants, keep only variants where `INFO/SV_TOP_TIER <= 3`
-* __Output__: `work/{batch}/structural/keep_pass/{batch}-manta.vcf`
-* Deal with chromosome capitalisation occurring from SnpEff
-* Run BreakPointInspector (BPI) if it was disabled in bcbio
-* __Output__: `work/{batch}/structural/maybe_bpi/{batch}-manta.vcf`
-
-__Step 2: Filtering__
-
-* Keep PASS variants (since BPI updates the FILTER column)
-* For BND variants require paired reads support (PR) to be higher than split read support (SR)
-* Keep all `INFO/SV_TOP_TIER <= 2` variants
-* For `INFO/SV_TOP_TIER > 2` variants require split _or_ paired reads support of at least 5x
-* For `INFO/SV_TOP_TIER > 2` variants with low allele frequency at any breakpoint (`BPI_AF[0 or 1] < 0.1`),
-  require SR or PR support of at least 10x
-* __Output__: `work/{batch}/structural/filt/{batch}-manta.vcf`
-
-__Step 3: PURPLE and FFPE conditional__
-
-* If the sample _is not_ FFPE:
-  * Feed above filtered SVs to PURPLE, which outputs `purple.sv.vcf.gz` that contains rescued SVs
-  * Prioritise variants (again)
-  * Remove 'INFO/ANN' annotation
-  * __Output__: `{batch}/structural/{batch}-manta.vcf.gz`
-* If the sample _is_ FFPE:
-  * Just copy `filtered` variants and don't do anything
-    (i.e. we don't want the rescued SVs from PURPLE since they'll likely be heaps)
-    (note that PURPLE will still get fed with the `filtered` SVs)
-  * __Output__: `{batch}/structural/{batch}-manta.vcf.gz`
-
-__Step 4: TSV final output__
-
-* Input: `{batch}/structural/{batch}-manta.vcf.gz` VCF
-* Output: `{batch}/structural/{batch}-manta.tsv` TSV
-
-
-```{r manta_tsv_description}
-sv_tsv_descr %>%
-  dplyr::arrange(Column) %>%
-  dplyr::mutate(Column = kableExtra::cell_spec(Column, bold = TRUE)) %>%
-  knitr::kable(escape = FALSE, caption = "Description of Manta TSV columns") %>%
-  kableExtra::kable_paper(c("hover", "striped"), full_width = FALSE, position = "left") %>%
-  kableExtra::scroll_box(height = "250px")
-```
-
-__Prioritisation process__
-
-1. Annotate with [SnpEff](http://snpeff.sourceforge.net/SnpEff_manual.html) based on Ensembl gene model
-2. Subset annotations to [APPRIS principal transcripts](http://appris.bioinfo.cnio.es/#/)
-3. Prioritize variants with [simple_sv_annotation](https://github.com/vladsaveliev/simple_sv_annotation)
-   1(high)-2(moderate)-3(low)-4(no interest):
-  * exon loss
-     - on prioritisation gene list (1)
-     - other (2)
-  * gene_fusion
-     - paired (hits two genes)
-        - on list of known pairs (1) (curated by [HMF](https://resources.hartwigmedicalfoundation.nl))
-        - one gene is a known promiscuous fusion gene (1) (curated by [HMF](https://resources.hartwigmedicalfoundation.nl))
-        - on list of FusionCatcher known pairs (2)
-        - other:
-           - one or two genes on prioritisation gene list (2)
-           - neither gene on prioritisation gene list (3)
-     - unpaired (hits one gene)
-         - on prioritisation gene list (2)
-         - others (3)
-  * upstream or downstream
-     - on prioritisation gene list genes (2)  - e.g. one gene is got into
-       control of another gene's promoter and get overexpressed (oncogene) or underexpressed (tsgene)
-  * LoF or HIGH impact in a tumor suppressor
-     - on prioritisation gene list (2)
-     - other TS gene (3)
-  * other (4)
-
-* Use PURPLE copy number caller to infer more SV calls from copy number transitions (marked as 'PURPLE Inferred')
-
-```{r effect_abbrev_tab}
-gpgr::EFFECT_ABBREVIATIONS %>%
-  tibble::enframe(value = "abbreviation") %>%
-  dplyr::arrange(abbreviation) %>%
-  dplyr::mutate(name = kableExtra::cell_spec(name, bold = TRUE)) %>%
-  knitr::kable(escape = FALSE) %>%
-  kableExtra::kable_paper(c("hover", "striped"), full_width = FALSE, position = "left") %>%
-  kableExtra::scroll_box(height = "250px")
-```
-
-</details>
-
 <details>
 <summary>What do the SV tables show?</summary>
 
@@ -1011,17 +903,6 @@ genomic regions which can involve hundreds or even thousands of genes. The
 annotations for these genes/transcripts are included in the original SV VCF,
 but they are extremely hard to display and browse inside a HTML table, due to
 their size.
-
-Therefore, we first show a 'Map' of the SVs corresponding
-to the main columns from the original SV VCF, but we don't show the
-`INFO/SIMPLE_ANN` annotation column, which contains the
-`Effect`, `Genes`, `Transcript`, and `Detail` values of a given SV. This makes
-a bit more sense if you take a look at the `nann` Map column,
-which shows the number of annotations corresponding to each VCF row. For example,
-`nann = 500` would mean that this variant corresponds to 500 annotations.
-These get shown in the next tables in a reshaped format, so that instead of
-showing 500 annotations for a single row in a single cell, we split that over
-multiple columns and rows. You can connect those tables to the Map by `vcfnum`.
 
 Example SV with -only- 3 annotations:
 
@@ -1037,10 +918,6 @@ DEL    | TFBS_ablation           |            | MA0114&MA0139&MA0281            
 DEL    | downstream_gene_variant | HFE2       | ENST00000336751_exon_1/4        | unprioritized | 4
 DEL    | intergenic_region       | TXNIP-HFE2 | ENSG00000265972-ENSG00000168509 | unprioritized | 4
 ```
-
-- The Map is sorted by `TierTop` then `vcfnum`:
-  - `TierTop` is the top tier of all annotations for a given variant.
-  - `vcfnum` is the variant row number in the umccrised VCF.
 
 </details>
 
