@@ -25,7 +25,6 @@ params:
   purple_som_gene_cnv: NULL
   purple_som_snv_vcf: NULL
   result_outdir: NULL
-  somatic_snv_summary: NULL
   somatic_snv_vcf: NULL
   somatic_sv_tsv: NULL
   somatic_sv_vcf: NULL
@@ -295,20 +294,6 @@ summarise_sigs <- function(mut_sig_contr) {
     paste(collapse = ", ")
 }
 
-snv_summary <- params$somatic_snv_summary %>%
-  jsonlite::read_json()
-snvs_max <- 500000
-hypermutated <- with(snv_summary, !is.null(pregnomad) && pregnomad > snvs_max && !is.null(gnomad) && gnomad > snvs_max)
-snv_summary <- snv_summary %>%
-  base::unlist() %>%
-  tibble::enframe() %>%
-  dplyr::mutate(
-    value = base::format(value, big.mark = ",", trim = TRUE),
-    x = glue("{name}: {value}")
-  ) %>%
-  dplyr::pull(x) %>%
-  base::paste(collapse = "; ")
-
 hrd_summary <- list(
   chord = chord_res[["prediction"]][, "p_hrd", drop = TRUE],
   hrdetect = hrdetect_res[, "Probability", drop = TRUE]
@@ -356,7 +341,6 @@ qc_summary_all <- dplyr::tribble(
     "Max: {cnv_summary[['som']]$Max}; ",
     "N: {cnv_summary[['som']]$N} "
   ), "",
-  17, "SNVs (Somatic)", snv_summary, "Summary of SNV filters, from raw to final.",
   18, "SVs (unmelted)", paste(rev(sv_summary$unmelted), collapse = ", "),
   "Summary of SVs as presented in raw VCF.",
   19, "SVs (melted)", paste(rev(sv_summary$melted), collapse = ", "),
@@ -1452,7 +1436,7 @@ if (is.null(params$conda_list)) {
 ### Report Inputs
 
 ```{r report_inputs}
-report_inputs <- dplyr::tibble(key = names(params), value = unlist(params))
+report_inputs <- dplyr::tibble(key = names(params), value = params)
 gpgr::write_tsvjsongz(report_inputs, glue("{bnm}-report_inputs"), result_outdir)
 
 report_inputs %>%
