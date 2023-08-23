@@ -416,7 +416,8 @@ purple_qc_read <- function(x) {
   nm <- c(
     "QCStatus", "Method", "CopyNumberSegments",
     "UnsupportedCopyNumberSegments", "Purity", "AmberGender",
-    "CobaltGender", "DeletedGenes", "Contamination", "GermlineAberrations"
+    "CobaltGender", "DeletedGenes", "Contamination", "GermlineAberrations",
+    "AmberMeanDepth"
   )
 
   assertthat::assert_that(all(purple_qc$key == nm))
@@ -438,6 +439,8 @@ purple_qc_read <- function(x) {
     "Rate of contamination in tumor sample as determined by AMBER.",
     16, "GermlineAberrations", glue::glue('{q["GermlineAberrations"]}'),
     "Can be one or more of: KLINEFELTER, TRISOMY_X/21/13/18/15, XYY, MOSAIC_X.",
+    18, "AmberMeanDepth", glue::glue('{q["AmberMeanDepth"]}'),
+    "Mean depth as determined by AMBER.",
   )
 
   list(
@@ -489,7 +492,9 @@ purple_purity_read <- function(x) {
     "tmlStatus", "c",
     "tmbPerMb", "d",
     "tmbStatus", "c",
-    "svTumorMutationalBurden", "d"
+    "svTumorMutationalBurden", "d",
+    "runMode", "c",
+    "targeted", "c"
   )
 
   ctypes <- paste(tab$type, collapse = "")

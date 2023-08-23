@@ -726,7 +726,7 @@ if (nrow(kat$data) > 0) {
 ```
 
 ```{r purple_plot_somaticrainfall, out.width="70%"}
-purple_plot_somaticrainfall <- file.path(img_dir, paste0(bnm, ".somatic.rainfall.png"))
+purple_plot_somaticrainfall <- file.path(img_dir, paste0(params$tumor_name, ".somatic.rainfall.png"))
 if (file.exists(purple_plot_somaticrainfall)) {
   knitr::include_graphics(purple_plot_somaticrainfall)
 } else {
@@ -833,7 +833,7 @@ The first BAF plot is based on PURPLE data and configuration files.
 </details>
 
 ```{r circos_baf_plot, out.width="80%"}
-knitr::include_graphics(file.path(img_dir, paste0(bnm, ".circos_baf.png")))
+knitr::include_graphics(file.path(img_dir, paste0(params$tumor_name, ".circos_baf.png")))
 ```
 
 ### SNVs/Indels, Total/Minor CN, SVs
@@ -868,7 +868,7 @@ knitr::include_graphics(file.path(img_dir, paste0(bnm, ".circos_baf.png")))
 </details>
 
 ```{r circos_default1, out.width="80%"}
-knitr::include_graphics(file.path(img_dir, paste0(bnm, ".circos.png")))
+knitr::include_graphics(file.path(img_dir, paste0(params$tumor_name, ".circos.png")))
 ```
 
 ### Allele Ratios, BAF
@@ -886,7 +886,7 @@ knitr::include_graphics(file.path(img_dir, paste0(bnm, ".circos.png")))
 </details>
 
 ```{r circos_default2, out.width="80%"}
-knitr::include_graphics(file.path(img_dir, paste0(bnm, ".input.png")))
+knitr::include_graphics(file.path(img_dir, paste0(params$tumor_name, ".input.png")))
 ```
 
 ```{r, results='asis'}
@@ -1283,7 +1283,7 @@ The following 'sunrise' chart shows the range of scores of all examined solution
 purity and ploidy. Crosshairs identify the best purity / ploidy solution.
 
 ```{r purple_plot_purityrange, out.width="40%"}
-knitr::include_graphics(file.path(img_dir, paste0(bnm, ".purity.range.png")))
+knitr::include_graphics(file.path(img_dir, paste0(params$tumor_name, ".purity.range.png")))
 ```
 
 ```{r, results='asis'}
@@ -1300,8 +1300,8 @@ down by copy number.
 
 ```{r purple_plot_copynumber, out.width="40%"}
 knitr::include_graphics(c(
-  file.path(img_dir, paste0(bnm, ".copynumber.png")),
-  file.path(img_dir, paste0(bnm, ".map.png"))
+  file.path(img_dir, paste0(params$tumor_name, ".copynumber.png")),
+  file.path(img_dir, paste0(params$tumor_name, ".map.png"))
 ))
 ```
 
@@ -1311,7 +1311,7 @@ If a somatic variant VCF has been supplied, a figure will be produced
 showing the somatic variant ploidy broken down by copy number.
 
 ```{r purple_plot_somatic, out.width="40%"}
-knitr::include_graphics(file.path(img_dir, paste0(bnm, ".somatic.png")))
+knitr::include_graphics(file.path(img_dir, paste0(params$tumor_name, ".somatic.png")))
 ```
 
 #### Clonality
@@ -1327,7 +1327,7 @@ We can determine the likelihood of a variant being subclonal at
 any given ploidy as shown in the bottom half of the figure.
 
 ```{r purple_plot_somaticclonality, out.width="50%"}
-knitr::include_graphics(file.path(img_dir, paste0(bnm, ".somatic.clonality.png")))
+knitr::include_graphics(file.path(img_dir, paste0(params$tumor_name, ".somatic.clonality.png")))
 ```
 
 #### Segment
@@ -1337,7 +1337,7 @@ the following figure. Each segment is divided into its major and minor allele pl
 The area of each circle shows the weight (AMBER baf count) of each segment.
 
 ```{r purple_plot_segment, out.width="40%"}
-knitr::include_graphics(file.path(img_dir, paste0(bnm, ".segment.png")))
+knitr::include_graphics(file.path(img_dir, paste0(params$tumor_name, ".segment.png")))
 ```
 
 ## __Oncoviruses__ {#oncoviruses}
@@ -1412,37 +1412,41 @@ blank_lines(2)
 ### Conda Pkgs Main
 
 ```{r conda_list_main}
-conda_pkgs <-
-  readr::read_table(params$conda_list,
-    col_names = c("env", "name", "version", "build", "channel"),
-    col_types = "ccccc"
-  ) %>%
-  dplyr::mutate(
-    channel = ifelse(is.na(channel), "MISSING", channel),
-    env = sub("^env", "umccrise", env),
-    env = sub("^umccrise_", "", env)
-  ) %>%
-  dplyr::arrange(name) %>%
-  dplyr::group_by(name, version, build, channel) %>%
-  dplyr::summarise(envs = paste(env, collapse = ", "), .groups = "drop_last") %>%
-  dplyr::ungroup()
+if (is.null(params$conda_list)) {
+  cat("No conda package list provided.")
+} else {
+  conda_pkgs <-
+    readr::read_table(params$conda_list,
+      col_names = c("env", "name", "version", "build", "channel"),
+      col_types = "ccccc"
+    ) %>%
+    dplyr::mutate(
+      channel = ifelse(is.na(channel), "MISSING", channel),
+      env = sub("^env", "umccrise", env),
+      env = sub("^umccrise_", "", env)
+    ) %>%
+    dplyr::arrange(name) %>%
+    dplyr::group_by(name, version, build, channel) %>%
+    dplyr::summarise(envs = paste(env, collapse = ", "), .groups = "drop_last") %>%
+    dplyr::ungroup()
 
-# main pkgs
-tibble::tibble(
-  name = c(
-    "umccrise", "r-gpgr", "r-sigrap", "r-base", "pcgr", "cpsr", "cacao",
-    "bioconductor-mutationalpatterns", "r-signature.tools.lib", "r-chord",
-    "hmftools-purple", "hmftools-amber", "hmftools-cobalt", "hmftools-sage",
-    "break-point-inspector", "multiqc", "multiqc-bcbio", "reference-data",
-    "bed_annotation", "vcf-stuff", "snakemake", "dvc", "ensembl-vep",
-    "samtools", "bcftools", "htslib", "ngs_utils", "python", "pandoc"
-  )
-) %>%
-  dplyr::left_join(conda_pkgs, by = "name") %>%
-  knitr::kable(format = "html") %>%
-  kableExtra::kable_paper(c("hover", "striped"), full_width = TRUE, position = "left") %>%
-  kableExtra::column_spec(1, bold = TRUE) %>%
-  kableExtra::scroll_box(height = "300px")
+  # main pkgs
+  tibble::tibble(
+    name = c(
+      "umccrise", "r-gpgr", "r-sigrap", "r-base", "pcgr", "cpsr", "cacao",
+      "bioconductor-mutationalpatterns", "r-signature.tools.lib", "r-chord",
+      "hmftools-purple", "hmftools-amber", "hmftools-cobalt", "hmftools-sage",
+      "break-point-inspector", "multiqc", "multiqc-bcbio", "reference-data",
+      "bed_annotation", "vcf-stuff", "snakemake", "dvc", "ensembl-vep",
+      "samtools", "bcftools", "htslib", "ngs_utils", "python", "pandoc"
+    )
+  ) %>%
+    dplyr::left_join(conda_pkgs, by = "name") %>%
+    knitr::kable(format = "html") %>%
+    kableExtra::kable_paper(c("hover", "striped"), full_width = TRUE, position = "left") %>%
+    kableExtra::column_spec(1, bold = TRUE) %>%
+    kableExtra::scroll_box(height = "300px")
+}
 ```
 
 ### Report Inputs
@@ -1461,13 +1465,17 @@ report_inputs %>%
 ### Conda Pkgs All
 
 ```{r conda_list_all}
-conda_pkgs %>%
-  DT::datatable(
-    filter = list(position = "top", clear = FALSE, plain = TRUE),
-    rownames = FALSE, extensions = c("Scroller", "Buttons"),
-    options = list(
-      scroller = TRUE, scrollX = TRUE, scrollY = 400,
-      buttons = c("csv"), dom = "Bfrtip"
+if (is.null(params$conda_list)) {
+  cat("No conda package list provided.")
+} else {
+  conda_pkgs %>%
+    DT::datatable(
+      filter = list(position = "top", clear = FALSE, plain = TRUE),
+      rownames = FALSE, extensions = c("Scroller", "Buttons"),
+      options = list(
+        scroller = TRUE, scrollX = TRUE, scrollY = 400,
+        buttons = c("csv"), dom = "Bfrtip"
+      )
     )
-  )
+}
 ```

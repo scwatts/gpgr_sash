@@ -3,7 +3,7 @@ canrep_add_args <- function(subp) {
   canrep$add_argument("--af_global", help = "Path to `af_tumor.txt` file.", required = TRUE)
   canrep$add_argument("--af_keygenes", help = "Path to `af_tumor_keygenes.txt` file.", required = TRUE)
   canrep$add_argument("--batch_name", help = "Name of batch sample.", required = TRUE)
-  canrep$add_argument("--conda_list", help = "Path to `conda_pkg_list.txt` file.", required = TRUE)
+  canrep$add_argument("--conda_list", help = "Path to `conda_pkg_list.txt` file.")
   canrep$add_argument("--img_dir", help = "Path to directory containing PURPLE plots.", required = TRUE)
   canrep$add_argument("--key_genes", help = "Path to UMCCR cancer gene file.", required = TRUE)
   canrep$add_argument("--somatic_snv_summary", help = "Path to `somatic_snv_summary.json`.", required = TRUE)
