@@ -237,23 +237,6 @@ blank_lines(1)
 <details>
 <summary>Description</summary>
 
-__SNV Summary__
-
-Starting from the raw DRAGEN calls, count the number of variants remaining after
-each filtration stage.
-
-- `raw`: raw DRAGEN calls.
-- `raw_pass`: PASSed raw.
-- `noalt`: in chr1-22, X, Y, M.
-- `sage`: including rescued by SAGE.
-- `pregnomad`: should be the same as above.
-- `gnomad`: in the hypermutated case, total remaining after removing those
-  with `gnomAD_AF >= 0.01` (that are not in hotspots).
-- `anno`: after any additional filters for hypermutated case.
-- `filt`: after applying main filters (tumor allele frequency, PCGR tiers etc.). Should be the same as above.
-- `filt_pass`: after removing those that failed to pass the thresholds set above.
-- `giab`: after removing those that are __not__ in GIAB confident regions.
-
 __PURPLE Summary__
 
 PURPLE outputs a QC status along with a summary
@@ -328,8 +311,6 @@ if (no_sv_found) {
 
 qc_summary_all <- dplyr::tribble(
   ~n, ~variable, ~value, ~details,
-  4, "Hypermutated", ifelse(hypermutated, "TRUE", "FALSE"),
-  ifelse(hypermutated, "More than 500K SNVs detected, so keep only small variants within UMCCR cancer gene regions (Ensembl v107).", ""),
   5, "MutSigs (Old)", glue::glue("{summarise_sigs(sigs_snv_2015)}"),
   "2015 COSMIC (https://cancer.sanger.ac.uk/cosmic/signatures_v2.tt)",
   5, "MutSigs (New)", glue::glue("{summarise_sigs(sigs_snv_2020)}"),
