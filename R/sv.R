@@ -158,15 +158,27 @@ sash_read_sv_tsv <- function(x) {
   )
 }
 
-
 split_svs <- function(x) {
+  bps_types <-  c('BND', 'DEL', 'DUP',' INS', 'INV')
+
+  x.grouped <- x |>
+    dplyr::group_by(
+      record_type=ifelse(Type %in% bps_types, 'bps', 'other')
+    )
+
+  keys <- x.grouped |>
+    dplyr::group_keys() |>
+    dplyr::pull(record_type)
+
+  x.split <- x.grouped |>
+    dplyr::group_split(.keep=FALSE) |>
+    purrr::set_names(keys)
+
   list(
-    purple_inferred = dplyr::filter(x, Type == "PURPLE_inf"),
-    sgl = dplyr::filter(x, Type == "SGL"),
-    bps = dplyr::filter(x, ! Type %in% c("PURPLE_inf", "SGL"))
+    bps = purrr::pluck(x.split, 'bps'),
+    other = purrr::pluck(x.split, 'other')
   )
 }
-
 
 join_breakpoint_entries <- function(x) {
   # Group by GRIDSS identifier (clipping trailing h/o [h: High, o: lOwer])
@@ -191,7 +203,6 @@ join_breakpoint_entries <- function(x) {
     dplyr::select(-c(end_position, end_chrom))
 }
 
-
 remove_gene_fusion_dups <- function(.data, columns) {
   # Order elements of multi-entry effect values for reliable comparison
   v.groups <- c("frameshift_variant&gene_fusion", "gene_fusion")
@@ -207,6 +218,38 @@ remove_gene_fusion_dups <- function(.data, columns) {
   }
 }
 
+filter_and_split_annotations_sv <- function(x) {
+
+  filter_conditions <- list(
+    # Empty Gene field
+    x$Genes == "",
+    # Only Ensembl identifiers in the Gene field
+    stringr::str_split(x$Genes, "[&-]") |> purrr::map_lgl(\(x) stringr::str_starts(x, "ENSG") |> all()),
+    # Fusions that do not involve genes
+    x$Effect == "Fus",
+    # PURPLE inferred SVs
+    x$Type == "PURPLE_inf"
+  )
+
+  x.grouped <- x |>
+    dplyr::group_by(
+      filter=ifelse(purrr::reduce(filter_conditions, `|`), "filter", "retain")
+    ) |>
+    dplyr::select(-Type)
+
+  keys <- x.grouped |>
+    dplyr::group_keys() |>
+    dplyr::pull(filter)
+
+  x.split <- x.grouped |>
+    dplyr::group_split(.keep=FALSE) |>
+    purrr::set_names(keys)
+
+  list(
+    retained = purrr::pluck(x.split, "retain"),
+    filtered = purrr::pluck(x.split, "filter")
+  )
+}
 
 set_many_transcripts_sv <- function(x) {
   # Set many transcripts
@@ -251,7 +294,6 @@ set_many_transcripts_sv <- function(x) {
   )
 }
 
-
 #' @export
 process_sv <- function(x) {
   # Read input and set column information
@@ -268,7 +310,12 @@ process_sv <- function(x) {
       "annotation_count" = count_pieces(annotation, ","),
       "Top Tier"= tier,
       "SR_PR_ref" = paste0(SR_ref, ",", PR_ref),
-      "SR_PR_sum" = SR_alt + PR_alt,
+      "SR_PR_sum" = dplyr::case_when(
+        is.na(SR_alt) & is.na(PR_alt) ~ NA,
+        is.na(SR_alt) ~ PR_alt,
+        is.na(PR_alt) ~ SR_alt,
+        .default = SR_alt + PR_alt,
+      ),
       start = paste(chrom, base::format(start, big.mark = ",", trim = TRUE), sep=":"),
       Type = ifelse(is.na(PURPLE_status), svtype, "PURPLE_inf"),
       "Record ID" = dplyr::row_number(),
@@ -280,34 +327,12 @@ process_sv <- function(x) {
       svtype,
     ))
 
-  # Split SVs by PURPLE inferred, single breakends, and breakpoints
+  # Split out breakpoints for merging
   sv.split <- split_svs(sv.ready)
 
-  # Combine joined breakpoints and single breakends
+  # Complete breakpoint records with corresponding mate, then combine with non-breakend records
   sv.bps <- join_breakpoint_entries(sv.split$bps)
-  sv.tmp <- dplyr::bind_rows(sv.split$sgl, sv.bps)
-
-  # Prepare PURPLE inf, add event id continue from assignment above
-  sv.purple_inf_full <- purrr::pluck(sv.split$purple_inferred) |>
-    dplyr::mutate(
-      CN_PURPLE = as.numeric(CN_PURPLE) |> round(2) %>% sprintf("%.2f", .),
-      CN_change_PURPLE = as.numeric(CN_change_PURPLE) |> round(3) %>% sprintf("%.3f", .),
-    ) |>
-    dplyr::rename(
-      "PURPLE CN" = CN_PURPLE,
-      "PURPLE CN Change" = CN_change_PURPLE,
-      "VCF ID" = ID,
-    )
-
-  # Select columns for dedicated PURPLE inf table
-  sv.purple_inf <- sv.purple_inf_full |>
-    dplyr::select(
-      "Record ID",
-      "VCF ID",
-      "Position" = "start",
-      "PURPLE CN",
-      "PURPLE CN Change",
-    )
+  sv.tmp <- dplyr::bind_rows(sv.bps, sv.split$other)
 
   # Format some columns
   cols_to_split <- c("AF_PURPLE", "CN_PURPLE")
@@ -317,8 +342,7 @@ process_sv <- function(x) {
     dplyr::bind_cols(double_cols)
 
   # Format a table for to be used as the SV Map
-  sv.unmelted <- dplyr::bind_rows(sv.tmp, sv.purple_inf_full)
-  sv.map <- sv.unmelted |>
+  sv.map <- sv.tmp |>
     dplyr::select(
       "Record ID",
       "Annotations" = "annotation_count",
@@ -338,7 +362,7 @@ process_sv <- function(x) {
     dplyr::arrange(`Record ID`)
 
   # Melt annotations
-  sv.melted_all <- sv.unmelted |>
+  sv.melted_all <- sv.tmp |>
     # Split into individual annotations
     dplyr::mutate(annotation = strsplit(annotation, ",")) |>
     # Convert annotation fields into columns
@@ -362,15 +386,11 @@ process_sv <- function(x) {
     dplyr::arrange(`Tier (top)`, `Record ID`, Genes, Effect)
 
   # Abbreviate effects
-  abbreviate_effectv <- Vectorize(gpgr::abbreviate_effect)
+  abbreviate_effectv <- Vectorize(abbreviate_effect)
   sv.melted_all$Effect <- abbreviate_effectv(sv.melted_all$Effect)
 
-  # Exclude PURPLE inferred
-  sv.melted <- sv.melted_all |>
-    dplyr::filter(Type != "PURPLE_inf")
-
-  # Select columns
-  sv.tmp <- sv.melted |>
+  # Select and rename columns
+  sv.melted_all <- sv.melted_all |>
     dplyr::select(
       "Record ID",
       "Annotation ID" = "annotation_id",
@@ -389,32 +409,24 @@ process_sv <- function(x) {
       "SR_PR_sum",
       "PURPLE AF" = "AF_PURPLE",
       "PURPLE CN" = "CN_PURPLE",
-      # Removed after ops
-      "Tier",
+      # Dropped after ops
+      "Type",
     )
 
-  # Split into priority groups, remove Tier column once split
-  sv.prioritised.tmp <- dplyr::filter(sv.tmp, Tier <= 3) |> dplyr::select(-Tier)
-  sv.unprioritised.tmp = dplyr::filter(sv.tmp, Tier >= 4) |> dplyr::select(-Tier)
+  # Create and set many transcript values
+  sv.annotations.many_transcript_data <- set_many_transcripts_sv(sv.melted_all)
+  sv.annotations.many_transcripts <- purrr::pluck(sv.annotations.many_transcript_data, "many_transcripts")
+  sv.annotations <- purrr::pluck(sv.annotations.many_transcript_data, "sv")
 
-  # Set many transcripts
-  sv.many_transcript_data.prioritised <- set_many_transcripts_sv(sv.prioritised.tmp)
-  sv.prioritised.many_transcripts <- purrr::pluck(sv.many_transcript_data.prioritised, "many_transcripts")
-  sv.prioritised <- purrr::pluck(sv.many_transcript_data.prioritised, "sv")
+  # Filter junk annotations
+  sv.annotations.spit <- filter_and_split_annotations_sv(sv.annotations)
 
-  sv.many_transcript_data.unprioritised <- set_many_transcripts_sv(sv.unprioritised.tmp)
-  sv.unprioritised.many_transcripts <- purrr::pluck(sv.many_transcript_data.unprioritised, "many_transcripts")
-  sv.unprioritised <- purrr::pluck(sv.many_transcript_data.unprioritised, "sv")
-
-  # Split into priority groups
   list(
     map = sv.map,
     map_melted = sv.melted_all,
-    prioritised = sv.prioritised,
-    many_transcripts_prioritised = sv.prioritised.many_transcripts,
-    unprioritised = sv.unprioritised,
-    many_transcripts_unprioritised = sv.unprioritised.many_transcripts,
-    purple_inferred = sv.purple_inf
+    annotations = sv.annotations.spit$retained,
+    annotations_filtered = sv.annotations.spit$filtered,
+    many_transcripts = sv.annotations.many_transcripts
   )
 }
 
